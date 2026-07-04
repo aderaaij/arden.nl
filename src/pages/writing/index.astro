@@ -1,10 +1,10 @@
 ---
-import { getCollection } from 'astro:content';
-import Base from '../../layouts/Base.astro';
-import WritingRows from '../../components/WritingRows.astro';
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import WritingRows from "../../components/WritingRows.astro";
 
-const posts = (await getCollection('writing')).sort(
-  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+const posts = (await getCollection("writing")).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
 );
 // Archive hidden for now — restore this and the section below when the old
 // posts are ported (and move src/pages/_posts back to posts/).
@@ -15,14 +15,14 @@ const posts = (await getCollection('writing')).sort(
 
 <Base
   title="Writing — Arden de Raaij"
-  description="Occasional deep-dives on front-end engineering — the writing is the showcase here, in place of a projects grid."
+  description="Occasional deep-dives on front-end engineering or whatever else I'm tinkering with."
 >
   <header class="page-header" data-rise data-rise-delay="0.05">
     <p class="eyebrow">Writing</p>
     <h1 class="page-title writing-title">Writing</h1>
     <p class="page-intro">
-      Occasional deep-dives — the writing is the showcase here, in place of a projects grid.
-      Quality over frequency, so a quiet stretch is intentional.
+      Occasional deep-dives on front-end engineering or whatever else I'm
+      tinkering with.
     </p>
   </header>
 
@@ -31,7 +31,8 @@ const posts = (await getCollection('writing')).sort(
     <WritingRows posts={posts} />
   </section>
 
-  {/* Archive hidden for now:
+  {
+    /* Archive hidden for now:
   <section class="section" data-rise data-rise-delay="0.2">
     <div class="section-label archive-label"><span class="mark">§</span>Archive · older work</div>
     <p class="archive-note">Older posts, kept at their original URLs.</p>
@@ -46,7 +47,8 @@ const posts = (await getCollection('writing')).sort(
         ))
       }
     </div>
-  </section> */}
+  </section> */
+  }
 </Base>
 
 <style>
