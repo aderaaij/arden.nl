@@ -1,0 +1,94 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="About — Arden de Raaij">
+  <header class="page-header" data-rise data-rise-delay="0.05">
+    <p class="eyebrow">About</p>
+    <h1 class="page-title">A bit of background</h1>
+  </header>
+
+  <section class="section about-prose" data-rise data-rise-delay="0.14">
+    <p>
+      I'm Arden, a senior front-end engineer from Amsterdam, living in Lisbon
+      since 2017.
+    </p>
+    <p>
+      I'm Arden, a front-end engineer from Amsterdam, living in Lisbon since
+      2017. I've been building for the web since 2008, The first decade or so
+      freelance and in Amsterdam agencies, everything from full-stack sites to
+      front-end tooling.
+    </p>
+    <p>
+      Since moving to Portugal I've worked across the range: agency work at <a
+        href="https://www.eae.pt/"
+        target="_blank"
+        rel="noopener">East Atlantic Engineering</a
+      >, then product teams at <a
+        href="https://www.mercedes-benz.io/"
+        target="_blank"
+        rel="noopener">Mercedes-Benz.io</a
+      >, <a href="https://www.plumguide.com/" target="_blank" rel="noopener"
+        >Plum Guide</a
+      >, and now <a
+        href="https://www.publicisgroupe.com/"
+        target="_blank"
+        rel="noopener">the Publicis Groupe</a
+      >. Consumer marketplaces, automotive platforms, media-planning tools,
+      mostly React and TypeScript, usually the complex, data-heavy kind, and
+      often the design-system layer underneath. At this point the work is as
+      much architecture, setting the bar for front-end quality, and mentoring
+      other developers as it is writing components myself. I came at this from
+      the creative side rather than computer science, which is probably why I
+      care as much about how a thing feels to use as how it's built underneath.
+    </p>
+    <p>
+      Away from client work I'm a tinkerer. I run a homelab, self-host most of
+      the tools I depend on, and build small things for myself like a
+      self-hosted fitness-tracking stack, MCP tooling, and various automation
+      scripts. I like owning my own data and understanding what I rely on.
+    </p>
+    <p>
+      When I'm not at a keyboard I'm usually behind a camera, out running, on a
+      snowboard, or somewhere out in the city. My photography lives over at <a
+        href="https://instagram.com/ardennl"
+        target="_blank"
+        rel="noopener">Instagram</a
+      >.
+    </p>
+    <p>
+      If you're after the formal CV, that's on <a
+        href="https://linkedin.com/in/ardenderaaij"
+        target="_blank"
+        rel="noopener">LinkedIn</a
+      >.
+      {
+        /* Restore when the blog is back: If you'd rather see how I think, the
+      <a href="/writing">writing's</a> a better place to start. */
+      }
+    </p>
+  </section>
+</Base>
+
+<style>
+  .about-prose {
+    max-width: 64ch;
+  }
+
+  .about-prose p {
+    margin: 0 0 22px;
+    font-size: clamp(17px, 2.1vw, 19px);
+    line-height: 1.65;
+    color: var(--intro);
+  }
+
+  .about-prose p:last-child {
+    margin: 0;
+  }
+
+  .about-prose a {
+    color: var(--ink);
+    text-decoration: none;
+    box-shadow: inset 0 -1.5px 0 var(--blue);
+  }
+</style>

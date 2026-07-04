@@ -1,0 +1,33 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  posts: CollectionEntry<'writing'>[];
+}
+
+const { posts } = Astro.props;
+
+const fmt = (d: Date) =>
+  d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase();
+---
+
+<div class="rows">
+  {
+    posts.map((post, i) => {
+      const num = String(i + 1).padStart(3, '0');
+      return post.data.draft ? (
+        <div class="row">
+          <span class="row-num">{num}</span>
+          <span class="row-title is-muted">{post.data.title}</span>
+          <span class="row-meta">— draft</span>
+        </div>
+      ) : (
+        <a class="row" href={`/writing/${post.id}/`}>
+          <span class="row-num">{num}</span>
+          <span class="row-title">{post.data.title}</span>
+          <span class="row-meta">{fmt(post.data.date)}</span>
+        </a>
+      );
+    })
+  }
+</div>

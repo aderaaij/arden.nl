@@ -1,0 +1,14 @@
+---
+import Logo from './Logo.astro';
+import ThemeToggle from './ThemeToggle';
+---
+
+<div class="topbar" data-rise>
+  <a class="logo-link" href="/" aria-label="Arden de Raaij — home">
+    <Logo />
+  </a>
+  <div class="topbar-right">
+    <span><span class="loc-mark">◦ </span>Lisbon · 38.72°N</span>
+    <ThemeToggle client:load />
+  </div>
+</div>

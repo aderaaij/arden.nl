@@ -1,0 +1,66 @@
+---
+import '@fontsource-variable/inter';
+import '@fontsource-variable/space-grotesk';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
+import '../styles/global.css';
+import TopBar from '../components/TopBar.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Arden de Raaij — Front-end engineer',
+  description = 'Front-end engineer in Lisbon. Building for the web since 2008 — mostly React and TypeScript, usually the data-heavy kind of interface where the details actually matter.',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <script is:inline>
+      // Runs before paint: mark JS as available (gates the entrance reveal)
+      // and resolve the theme so there is no flash of the wrong palette.
+      document.documentElement.classList.add('js');
+      (function () {
+        var theme = 'light';
+        try {
+          var stored = localStorage.getItem('theme');
+          if (stored === 'light' || stored === 'dark') theme = stored;
+          else if (window.matchMedia('(prefers-color-scheme: dark)').matches) theme = 'dark';
+        } catch (e) {}
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="container">
+      <TopBar />
+      <slot />
+      <Footer />
+    </div>
+    <script>
+      import { animate } from 'motion';
+
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.querySelectorAll<HTMLElement>('[data-rise]').forEach((el) => {
+          animate(
+            el,
+            { opacity: [0, 1], y: [16, 0] },
+            { duration: 0.5, delay: Number(el.dataset.riseDelay ?? 0), ease: [0.2, 0.7, 0.3, 1] }
+          );
+        });
+      }
+    </script>
+  </body>
+</html>

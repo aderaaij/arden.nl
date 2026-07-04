@@ -1,0 +1,74 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import WritingRows from '../../components/WritingRows.astro';
+
+const posts = (await getCollection('writing')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+const archive = (await getCollection('archive')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+---
+
+<Base
+  title="Writing — Arden de Raaij"
+  description="Occasional deep-dives on front-end engineering — the writing is the showcase here, in place of a projects grid."
+>
+  <header class="page-header" data-rise data-rise-delay="0.05">
+    <p class="eyebrow">Writing</p>
+    <h1 class="page-title writing-title">Writing</h1>
+    <p class="page-intro">
+      Occasional deep-dives — the writing is the showcase here, in place of a projects grid.
+      Quality over frequency, so a quiet stretch is intentional.
+    </p>
+  </header>
+
+  <section class="section" data-rise data-rise-delay="0.13">
+    <div class="section-label"><span class="mark">§</span>Recent</div>
+    <WritingRows posts={posts} />
+  </section>
+
+  <section class="section" data-rise data-rise-delay="0.2">
+    <div class="section-label archive-label"><span class="mark">§</span>Archive · older work</div>
+    <p class="archive-note">Older posts, kept at their original URLs.</p>
+    <div class="rows">
+      {
+        archive.map((post) => (
+          <a class="row row-archive" href={`/posts/${post.id}/`}>
+            <span class="row-num is-faint">{post.data.date.getFullYear()}</span>
+            <span class="row-title is-muted">{post.data.title}</span>
+            <span class="row-meta">↗</span>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+</Base>
+
+<style>
+  .writing-title {
+    margin-bottom: 26px;
+  }
+
+  .page-intro {
+    max-width: 58ch;
+    font-size: clamp(17px, 2.1vw, 19px);
+    line-height: 1.6;
+    color: var(--intro);
+    margin: 0;
+  }
+
+  .archive-label {
+    margin-bottom: 14px;
+  }
+
+  .archive-note {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--faint);
+    margin: 0 0 22px;
+    max-width: 52ch;
+  }
+</style>

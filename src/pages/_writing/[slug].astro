@@ -1,0 +1,33 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('writing', ({ data }) => !data.draft);
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+const words = (post.body ?? '').trim().split(/\s+/).length;
+const minutes = post.data.readingTime ?? Math.max(1, Math.round(words / 200));
+const dateLabel = post.data.date.toLocaleDateString('en-GB', {
+  month: 'short',
+  year: 'numeric',
+});
+---
+
+<Base title={`${post.data.title} — Arden de Raaij`} description={post.data.description}>
+  <article class="post" data-rise data-rise-delay="0.05">
+    <div class="post-meta">
+      <a href="/writing">← Writing</a>
+      <span>{dateLabel} · {minutes} min read</span>
+    </div>
+    <h1 class="post-title">{post.data.title}</h1>
+    <p class="post-lede">{post.data.description}</p>
+    <div class="prose">
+      <Content />
+    </div>
+  </article>
+</Base>

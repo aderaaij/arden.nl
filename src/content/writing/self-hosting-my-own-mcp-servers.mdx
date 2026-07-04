@@ -1,0 +1,39 @@
+---
+title: Self-hosting my own MCP servers
+description: A long weekend, a spare mini-PC, and a growing distrust of pointing my editor at other people's endpoints. Notes on running the Model Context Protocol stack entirely on hardware I own.
+date: 2026-06-15
+readingTime: 8
+---
+
+## Why bother
+
+The MCP ecosystem moved fast, and most of the servers I wanted to try were someone else's process running somewhere I couldn't see. For a tool that sits between my editor and my files, that's a lot of implicit trust. Self-hosting turns that trust into something I can inspect.
+
+It also fixes the boring problems: no rate limits I didn't set, no surprise deprecations, and latency measured in single-digit milliseconds because the server is on the same LAN.
+
+## The setup
+
+Everything runs on a fanless mini-PC under the desk, behind a reverse proxy, each server in its own container. A single compose file describes the whole thing, which means the entire stack is one command to stand up and one file to review.
+
+```yaml
+services:
+  fs-mcp:
+    image: ghcr.io/…/filesystem-mcp:latest
+    volumes:
+      - ~/work:/data:ro
+  git-mcp:
+    image: ghcr.io/…/git-mcp:latest
+    restart: unless-stopped
+```
+
+> The nice thing about owning the whole path is that when something breaks, there's exactly one place to look.
+
+## What I'd do differently
+
+I over-engineered auth on the first pass — mutual TLS between the editor and a server on my own machine is security theatre. A scoped token and a firewall rule would have saved an evening.
+
+- Start with one server, not six.
+- Log everything to begin with; trim later.
+- Keep the compose file in the same repo as your notes.
+
+None of this is load-bearing infrastructure. It's a homelab — the point is to understand the thing I depend on, and to have somewhere to poke at it when I'm curious.
