@@ -1,15 +1,12 @@
 ---
+import { getCollection } from "astro:content";
 import Base from "../layouts/Base.astro";
 import GlitchWordmark from "../components/GlitchWordmark";
-// Writing hidden for now — when it returns, restore these imports, the nav
-// link, and the "Selected writing" section below (and move src/pages/_writing
-// and src/pages/_posts back to writing/ and posts/).
-// import { getCollection } from 'astro:content';
-// import WritingRows from '../components/WritingRows.astro';
-//
-// const posts = (await getCollection('writing')).sort(
-//   (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
-// );
+import WritingRows from "../components/WritingRows.astro";
+
+const posts = (await getCollection("writing")).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
 ---
 
 <Base>
@@ -26,10 +23,7 @@ import GlitchWordmark from "../components/GlitchWordmark";
       I care how a thing feels to use as much as how it's built.
     </p>
     <nav class="paths" data-rise data-rise-delay="0.29">
-      {
-        /* Hidden until the blog goes live:
-      <a class="path" href="/writing">Writing</a> */
-      }
+      <a class="path" href="/writing">Writing</a>
       <a class="path" href="/about">About</a>
       {
         /* Hidden until photo.arden.nl is live:
@@ -56,14 +50,11 @@ import GlitchWordmark from "../components/GlitchWordmark";
     </nav>
   </header>
 
-  {
-    /* Hidden until the blog goes live:
   <section class="section" data-rise data-rise-delay="0.37">
     <div class="section-label"><span class="mark">§</span>Selected writing</div>
     <WritingRows posts={posts} />
-    <a class="more-link" href="/writing">All writing, and the archive →</a>
-  </section> */
-  }
+    <a class="more-link" href="/writing">All writing →</a>
+  </section>
 </Base>
 
 <style>

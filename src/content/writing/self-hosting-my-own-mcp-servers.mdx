@@ -1,39 +1,87 @@
 ---
 title: Self-hosting my own MCP servers
-description: A long weekend, a spare mini-PC, and a growing distrust of pointing my editor at other people's endpoints. Notes on running the Model Context Protocol stack entirely on hardware I own.
-date: 2026-06-15
-readingTime: 8
+description: Keeping control over all your data while staying flexible about which LLM you use
+date: 2026-07-04
+draft: false
 ---
 
-## Why bother
+With the rapid development in the LLM space, it's easier than ever to create software. GitHub repos seem to grow exponentially and the app stores are flooded with vibe-coded apps. A lot of these apps are AI Assistants that help you schedule your day, train you for a marathon, organize your finances, etc. and each of those would like you to press the 'connect your account' button to share your mail, fitness data, bank account data, you name it. Click it, and somewhere a third party now holds a token to your information. Their servers sit in the middle of requests and their scopes are whatever they decide to ask for.
 
-The MCP ecosystem moved fast, and most of the servers I wanted to try were someone else's process running somewhere I couldn't see. For a tool that sits between my editor and my files, that's a lot of implicit trust. Self-hosting turns that trust into something I can inspect.
+Even though I love the idea of the convenience these assistants promise, I don't like the idea of giving up all my data and, in many cases, paying for yet another app's LLM usage while I've got a Claude subscription myself. That's why I decided to use my Plex box (which is always on anyways) to see if I could host a bunch of MCPs to use my own data and allow Claude Desktop to be all of those apps for me.
 
-It also fixes the boring problems: no rate limits I didn't set, no surprise deprecations, and latency measured in single-digit milliseconds because the server is on the same LAN.
+It works better than I expected. Claude Desktop and claude.ai both talk to my data with full fidelity, and the only thing that ever transits to Anthropic is the answer to the question I asked.
 
-## The setup
+## What MCP actually changes
 
-Everything runs on a fanless mini-PC under the desk, behind a reverse proxy, each server in its own container. A single compose file describes the whole thing, which means the entire stack is one command to stand up and one file to review.
+The Model Context Protocol gets described as "USB for AI tools," which undersells the interesting part. The interesting part is _where the tools run_.
 
-```yaml
-services:
-  fs-mcp:
-    image: ghcr.io/…/filesystem-mcp:latest
-    volumes:
-      - ~/work:/data:ro
-  git-mcp:
-    image: ghcr.io/…/git-mcp:latest
-    restart: unless-stopped
+MCP splits the model from the integration. The model says "call `get_portfolio`," and something on the other end of the connection answers. Nothing in the protocol says that something has to be a vendor's SaaS. It can be a €200 Beelink N100 sitting next to your router, running a Python process you wrote, holding credentials that never leave your LAN.
+
+That inversion is the whole game. With an official cloud connector, your OAuth tokens live on infrastructure you don't control and every request flows through it. With a self-hosted MCP server, the model sees exactly one thing: the tool results you chose to return. Not your API keys. Not the raw firehose. Not the 40 fields the upstream API returns when you only needed 3.
+
+## The hardware is the boring part
+
+Everything runs on a Beelink N100 mini-PC: four low-power cores, 16 GB of RAM, Ubuntu LTS. It was originally bought for Plex and Pi-hole. MCP servers turned out to be a rounding error on top: they're mostly idle Python processes that wake up when a model calls a tool. If you have any always-on box, you have enough.
+
+Each server follows the same anatomy:
+
+- A small **Python FastMCP** app speaking MCP over stdio, with a handful of typed tool functions, nothing exotic.
+- **supergateway** wrapping it into Streamable HTTP, so remote clients can reach it. One shared, pinned install serves the whole fleet, so there's exactly one place to bump the version.
+- A **systemd user unit** per server. Logs in `journalctl`, restarts on failure, starts on boot. Old-fashioned and completely legible.
+
+After the third server I got tired of copy-pasting, so I open-sourced the scaffolding as [mcp-template](https://github.com/aderaaij/mcp-template): one command generates the FastMCP project, the config plumbing, and the systemd unit. A new integration can literally be created within the hour: write the tools, drop in credentials, `systemctl --user enable --now`. There are ten of them at this point: tasks, bookmarks, media, workouts, health metrics, two brokerages, a finance aggregator, Gmail. If you want to see a complete, real one rather than a template, the [training API](https://github.com/aderaaij/training-api) is public and ships with its MCP server alongside the REST API it wraps.
+
+## Claude Desktop: the easy path
+
+For Claude Desktop, the answer is Tailscale and it is gloriously anticlimactic. The servers listen only on the tailnet; my MacBook connects over WireGuard from anywhere. No open ports on my router, no auth dance, no certificates to manage. As far as Claude Desktop is concerned, my finance server might as well be running on localhost.
+
+If you only use Desktop, you can stop reading here and be done in an afternoon.
+
+## claude.ai: the honest path
+
+Getting the same servers into claude.ai (and the mobile apps) is where the weekend went. Claude's web client can't join your tailnet. It needs a public HTTPS endpoint with real OAuth in front. My chain looks like this:
+
+```
+claude.ai ──HTTPS──▶ Cloudflare Tunnel ──▶ OAuth proxy ──▶ MCP server
+                     (no inbound ports)    (Google sign-in,   (localhost)
+                                            me and only me)
 ```
 
-> The nice thing about owning the whole path is that when something breaks, there's exactly one place to look.
+The Cloudflare Tunnel means my router still has zero ports open; the connection is outbound from the box. The auth proxy sits in front and requires a Google login pinned to my account before anything reaches the actual server.
 
-## What I'd do differently
+I won't pretend this layer was smooth. I ended up patching the open-source auth proxy for a handful of real-world issues: token lifetimes the web client doesn't refresh properly, SSE streams that drop and need keepalives to survive Cloudflare's idle timeout, duplicate connections that had to be deduplicated. None of it was hard, all of it was fiddly, and it's the one part of the stack I'd call "hobbyist grade with sharp edges." Desktop-over-Tailscale needs none of it.
 
-I over-engineered auth on the first pass — mutual TLS between the editor and a server on my own machine is security theatre. A scoped token and a firewall rule would have saved an evening.
+## The control knobs you don't get any other way
 
-- Start with one server, not six.
-- Log everything to begin with; trim later.
-- Keep the compose file in the same repo as your notes.
+Self-hosting the tool layer isn't just about where the bytes sit. It gives you levers that no hosted connector offers:
 
-None of this is load-bearing infrastructure. It's a homelab — the point is to understand the thing I depend on, and to have somewhere to poke at it when I'm curious.
+**The tool surface is the contract.** The model can only do what you exposed. My brokerage servers are read-only _by construction_: there is no `place_order` tool to call, no matter what anyone prompts. That's a stronger guarantee than a permission checkbox; the capability simply doesn't exist.
+
+**Credentials never leave the house.** The model gets tool results, never tokens. And on the box itself, the sensitive logins are sealed to the machine's TPM, decrypted into memory at service start, with no plaintext secrets on disk. My broker password doesn't exist as a readable file anywhere.
+
+**The aggregation stays home.** This is the one I care most about. The genuinely sensitive artifact isn't any single account. It's the _join_: every bank, brokerage, and pension in one place. Mine lives in a Postgres database on my own disk, filled every six hours by ingesters that talk to the banks directly. When I ask claude.ai "how did my net worth move this quarter?", the MCP server queries that local database and returns a summary. The complete financial picture never exists anywhere I don't control.
+
+**You choose the granularity per surface.** My self-hosted Gmail server can archive, label, and delete (capabilities the official connector doesn't offer) precisely because I decided it should, and I know exactly which OAuth client holds that power and where its token sits.
+
+**It's auditable.** One process per integration, one log stream each. When I want to know what the model actually asked for last Tuesday, `journalctl` will tell me, and no vendor dashboard is involved.
+
+## What it costs
+
+An honest ledger, because the self-hosting genre loves to skip this part:
+
+- **Sessions expire.** One of my banks has no headless login, so every few weeks I SSH in and type a 4-digit code. Automation has a floor, and the floor is sometimes a human with a phone.
+- **OAuth apps need babysitting.** Google Cloud consent screens, redirect URIs, verification states: the ambient bureaucracy of pretending to be a real app.
+- **Upstream moves.** A dependency update once reverted a patch I'd forgotten I made. The fix is a README note and humility.
+- **The claude.ai transport is still moody.** Web-side SSE connections drop more than they should; reconnecting fixes it. Desktop over Tailscale never blinks.
+
+Call it 15 minutes a month of maintenance, heavily front-loaded. Whether that's a price or a hobby depends on your interests. For me it scratches the same itch as the rest of the homelab: I'd rather own a small amount of toil than rent away all the control.
+
+## The trade I actually wanted
+
+Large language models are genuinely useful in proportion to how much context you give them, and that creates an uncomfortable gradient: the more useful the assistant, the more of your life sits behind someone else's connector. Most people resolve the tension by either withholding everything or surrendering everything.
+
+MCP, self-hosted, is a third option. The model stays rented; this is the best part and I can't run it anyway. But the memory, the credentials, the joins, the levers? Those live on a small quiet box in my apartment, and every one of them is mine to grant, scope, and revoke.
+
+And there's a second payoff I didn't plan for. Because these servers speak an open protocol instead of any single vendor's SDK, the model itself stays swappable. Today my client is Claude and I'm happy there, but nothing in this stack is welded to it. Point any MCP-capable client at the same servers and they answer just the same. The day I want to switch providers, or run a local model against my own data, the integration layer doesn't change a single line. Owning your data and staying free to choose the brain that reads it turn out to be the same decision.
+
+So Claude gets exactly what I hand it, one tool call at a time, for exactly as long as I choose Claude. That's not distrust of the model. It's just the correct default for everything else in the chain.
