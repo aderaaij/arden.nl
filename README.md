@@ -1,43 +1,36 @@
-# Astro Starter Kit: Minimal
+# arden.nl
+
+Source for [arden.nl](https://arden.nl) — personal site and writing.
+
+## Stack
+
+- [Astro 7](https://astro.build) with React 19 islands for the interactive bits (glitch wordmark, theme toggle)
+- MDX for posts, [motion](https://motion.dev) for animation
+- Self-hosted fonts via Fontsource: Inter, Space Grotesk, IBM Plex Mono
+- Deployed on Cloudflare Pages via the git integration — every push to `main` ships
+
+## Content
+
+Two content collections (`src/content.config.ts`):
+
+- **`writing/`** — current posts, served at `/writing/[slug]`. Posts with `draft: true` appear in the writing index as unlinked rows and never get a route.
+- **`archive/`** — pre-redesign posts, kept alive at their original `/posts/[slug]` URLs.
+
+Slug renames get a 301 in `public/_redirects` so old links keep working.
+
+Markdown code blocks are intentionally unhighlighted — the prose styles render them as plain panels.
+
+## Analytics
+
+Self-hosted [Umami](https://umami.is) — cookie-less, no personal data collected, so no consent banner. The tracking script is only injected in production builds.
+
+## Development
+
+Requires Node ≥ 22.12.
 
 ```sh
-npm create astro@latest -- --template minimal
+npm install
+npm run dev      # dev server at localhost:4321
+npm run build    # production build to ./dist/
+npm run preview  # preview the production build
 ```
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
-
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
