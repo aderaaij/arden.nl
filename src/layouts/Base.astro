@@ -27,6 +27,16 @@ const {
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
+    {
+      import.meta.env.PROD && (
+        <script
+          is:inline
+          defer
+          src="https://analytics.arden.nl/script.js"
+          data-website-id="9ab7775d-7750-4a36-a337-c8d896fda980"
+        />
+      )
+    }
     <script is:inline>
       // Runs before paint: mark JS as available (gates the entrance reveal)
       // and resolve the theme so there is no flash of the wrong palette.
