@@ -1,53 +1,36 @@
 ---
-title: Self-hosting my own MCP servers
+title: Self-hosting MCP servers
 description: Owning your data while staying free to swap the model that reads it
 date: 2026-07-04
 draft: false
 ---
 
-**TL;DR**
+One of the more mundane realities of our AI future (in the form of Large Language Models, anyway) is that every software developer seems hell-bent on crowbarring in some form of AI and charging a premium to cover the model costs. This reduces a lot of software, and especially a lot of apps, to being glorified wrappers around frontier models that can't be run without having a series of lake-evaporating data centers around the globe. The friction is (setting the lake-evaporating thing aside for a minute) that many of us already have access to these models through paid or free-tier subscriptions. And I, for one, am not really keen on financing the pivot to becoming an ✨AI first✨ company for my goddamned to-do list app.
 
-This post might be AI-assisted, AI-written, or typed out by hand. At this point the distinction barely survives contact with your feed, and it doesn't change what you should do with it. So here's the action list up front. Read the prose below if you want the reasoning (and the sharp edges); paste it into your model of choice if you don't. No hard feelings.
+It's not just about being cheap though, but also about owning your own data and controlling where it goes. Every time an app asks you to _connect your xyz account_ and hand over a token to your mail, calendar, fitness or financial data, you're now handing over data to both them and a third party LLM provider.
 
-The pitch, in one line: I like AI assistants, I don't like handing every app a token to my whole life and paying for their LLM on top of the Claude subscription I already have. Self-hosted MCP servers let me keep the data at home while the model stays rented and swappable.
+I do love the convenience and sometimes genuinely impressive results that LLMs offer in my day to day and I'm willing to sacrifice some data privacy to our new AI overlords. On several occasions I've shared data like running statistics or even financial data with my clanker of choice (Claude by Anthropic) to get back plans and patterns I wouldn't have come up with myself (always double check, never trust a clanker on their word though) On top of that, the more consistent and detailed data I send, the better the plans and patterns I get back are.
 
-What to actually do:
+That's how I found myself in the situation of having multiple long running chats with Claude, sharing specific data about specific topics and creating plans or artifacts out of them. This was far from perfect, as for my running data I was just sharing screenshots of my runs in Apple Fitness, and for my workouts I exported an excel sheet with workout data and fed it to the same chat. Besides the clumsy logistics, it also gave too much or too little data, was hard to keep track of and created chats with larger and larger contexts.
 
-- **Find an always-on box.** Any idle homelab machine works. Mine is a €200 Beelink N100; the servers are idle Python processes that wake on a tool call.
-- **Give each integration the same anatomy:** a [FastMCP](https://github.com/aderaaij/mcp-template) app (Python) + supergateway (to speak HTTP) + a `systemd` user unit. Scaffolding: [mcp-template](https://github.com/aderaaij/mcp-template). A complete real one: [training-api](https://github.com/aderaaij/training-api).
-- **For Claude Desktop:** put the servers on your tailnet with Tailscale. No open ports, no OAuth.
-- **For claude.ai + mobile:** you need a public HTTPS endpoint — Cloudflare Tunnel + an OAuth proxy pinned to your account. Doable, fiddly, the sharp-edged part.
-- **The payoff:** read-only _by construction_ where you want it, credentials that never leave the box, the sensitive _join_ of all your accounts on your own disk, and — because it's an open protocol — a model you can swap out without touching a line.
+## What MCP actually changed
 
----
+Model Context Protocol (MCP) is the de facto standard for connecting AI applications to external systems. This allows us to split the AI model from the integration by handing the model a bunch of tools which, when called, perform a specific action like direct database read/writes or retrieving data from an internal/external API. So instead of handfeeding Apple Fitness screenshots to a Claude chat, we can connect our Claude client with a training MCP which provides `get_recent_runs` as a tool, and the recent runs will be inserted into the chat in a structured way, with all the data I'd like it to include. The great thing about this, is that an MCP doesn't have to run on a cloud network, you can easily self-host them.
 
-AI assistants really do make life easier. Things like scheduling your day, coaching your marathon, tidying your finances or taking care of bureaucracy are genuinely useful and come at the modest cost of evaporating a small lake somewhere near a datacenter every time you ask what the weather's like. But I'm setting that part aside for a minute.
+This way of working turned out better than I expected. I use both Claude Desktop and Claude web as clients. I don't expose everything to Claude web, but the connection to Claude Desktop is flawless.
 
-My objection is smaller and pettier. Every one of these assistants wants you to press _connect your account_ and hand over a token to your mail, your fitness data, your bank. Click it, and a third party you've never met holds a key to your life, on servers you don't control, with scopes they chose. Most of them also want to charge you for it, running their own LLM wrapper on top of a subscription.
+## The set-up
 
-I still want the convenience. And here's the uncomfortable part I'll admit up front: these things genuinely get _better_ the more of your life you feed them. So the two usual answers - surrender everything or withhold everything - both cost something real. I wanted a third option. My Plex box is always on anyway, so I set out to host the integrations myself and let Claude Desktop and claude.ai _be_ all those apps, using my data, without any of it leaving home.
+A couple of years ago I bought this Beelink N100 mini-pc for like 200 bucks to serve as a media-server. This was before every piece of memory hardware became 4x the price because of AI developments (it's a vicious circle), but I think they're still out there for reasonable prices. I run Ubuntu Server on it and it's always on, so the perfect candidate to host some applications.
 
-It works better than I expected. Both clients talk to my data with full fidelity, and the only thing that ever reaches Anthropic is the answer to the question I asked.
+Each of my servers has the same kind of base. A small FastMCP application speaking MCP over stdio with a bunch of typed tool functions. Supergateway wraps it into HTTP so remote clients can reach it. I've got one Supergateway install that serves my entire MCP fleet. Because I was repeating the same code so much, I built a small [mcp-template](https://github.com/aderaaij/mcp-template): one command generates the project, the config, and the unit. A new integration takes under an hour: write the tools, drop in credentials, `systemctl --user enable --now`.
+I've got ten running at the time of writing: tasks, bookmarks, media, workouts, health metrics, two brokerages, a finance aggregator, Gmail. For a complete, real example you can have a look at my [training-api](https://github.com/aderaaij/training-api) which ships its MCP server alongside the REST API it wraps.
 
-## What MCP actually changes
+## The clients
 
-MCP gets sold as "USB for AI tools," which misses the good part: _where the tools run_. The protocol splits the model from the integration. The model says "call `get_portfolio`" and something answers — and nothing says that something has to be a vendor's cloud. It can be a €200 mini-PC next to your router, running a Python process you wrote, holding credentials that never touch the internet.
+As I've only got a Claude subscription, my clients are Claude Desktop and Claude web. Claude Desktop was surprisingly easy to set-up: Tailscale solved almost everything. The servers listen only on the tailnet; my MacBook reaches them over WireGuard from anywhere. No open ports, no authentication, no certificates. Not reachable over the network by default. As far as Claude Desktop is concerned, my servers run on localhost. If a desktop client is all you want to use, things are genuinely easy.
 
-That inversion is the whole game. With a cloud connector, your tokens live on infrastructure you don't control and every request flows through it. With a self-hosted server, the model sees exactly one thing: the tool results you chose to return. Not your keys, not the raw firehose, not the 40 fields the upstream API sends when you needed 3.
-
-## The hardware
-
-Everything runs on a Beelink N100: four low-power cores, 16 GB RAM, Ubuntu LTS, originally bought for Plex and Pi-hole. The MCP servers are a rounding error on top — mostly idle Python processes that wake when a model calls a tool. If you have any always-on box, you have enough.
-
-Each server has the same anatomy: a small **FastMCP** app speaking MCP over stdio with a handful of typed tool functions; **supergateway** wrapping it into HTTP so remote clients can reach it (one pinned install serves the whole fleet); and a **systemd user unit** each, so logs land in `journalctl`, failures restart, and everything comes back on boot.
-
-After the third server I got tired of copy-pasting and open-sourced the scaffolding as [mcp-template](https://github.com/aderaaij/mcp-template): one command generates the project, the config, and the unit. A new integration takes under an hour: write the tools, drop in credentials, `systemctl --user enable --now`. There are ten now: tasks, bookmarks, media, workouts, health metrics, two brokerages, a finance aggregator, Gmail. For a complete, real one rather than a template, [training-api](https://github.com/aderaaij/training-api) ships its MCP server alongside the REST API it wraps.
-
-## Two clients, two paths
-
-**Claude Desktop is the easy one, and gloriously anticlimactic:** Tailscale. The servers listen only on the tailnet; my MacBook reaches them over WireGuard from anywhere. No open ports, no auth dance, no certificates. As far as Desktop is concerned, my finance server runs on localhost. If Desktop is all you use, you're done in an afternoon.
-
-**claude.ai and the mobile apps are where the weekend went.** The web client can't join your tailnet — it needs a public HTTPS endpoint with real OAuth in front:
+**claude.ai and the mobile apps were a bit more complicated** The web client can't join your tailnet. It needs a public HTTPS endpoint with real OAuth in front, so here's what we (my clanker and I) came up with:
 
 ```
 claude.ai ──HTTPS──▶ Cloudflare Tunnel ──▶ OAuth proxy ──▶ MCP server
@@ -55,33 +38,21 @@ claude.ai ──HTTPS──▶ Cloudflare Tunnel ──▶ OAuth proxy ──▶
                                             me and only me)
 ```
 
-The tunnel keeps every router port closed — the connection is outbound from the box — and the proxy requires a Google login pinned to my account before anything reaches a server. I won't pretend this layer was smooth: I patched the open-source auth proxy for token lifetimes the web client won't refresh, SSE streams that drop without keepalives under Cloudflare's idle timeout, and duplicate connections that needed deduplicating. None of it hard, all of it fiddly. It's the one part of the stack I'd call hobbyist-grade with sharp edges. Desktop-over-Tailscale needs none of it.
+The tunnel keeps every router port closed. The connection is outbound from the box and the proxy requires a Google login pinned to my account before anything reaches a server. This part was far from smooth: I had to patch an open-source auth proxy for token lifetimes the web client didn't want to refresh (this might be patched at the time of you reading this), kept on running into SSE stream issues under Cloudflare's idle timeout and created a whole bunch of duplicate connections that needed deduplicating. None of it was super difficult but it was time consuming and probably the part I need to put in some more effort to make it better than hobby grade. Desktop-over-Tailscale however is solid as a rock.
 
-## The levers you don't get anywhere else
+## How I use it
 
-Self-hosting the tool layer isn't only about where the bytes sit. It hands you controls no hosted connector offers:
+- **Daily briefings and EOD reviews:** Every day a scheduled task in Claude Desktop gathers my emails, my todo-list items, my calendar, my training schedule and my media server watch lists and tells me what is overdue, what should have priority and what can be rescheduled. If I want to send out emails, reschedule calendar items or other to-do's, I can do so right from the chat. At the end of the day we do the same so we've got everything organized for the next day. This one really feels like having an actual assistant that reminds you anything that might've flown under the radar otherwise.
+- **Training/health evaluation:** This is one of my favorites. I've got one API (and accompanying app which I'll write about later) which gathers all my running stats and syncs my relevant Apple health data here as well. Based on this I can evaluate my progress, find explanations for performance and create new training plans based on previous data.
+- **Finance API:** I've gathered all my financial data from different brokers and banks in one place and made an MCP with limited access so that Claude can give me overviews and predictions on my financial status. It also connects to my brokers so if I want to make investments on some sort of hypothesis I can have Claude keep an eye on the stocks and create a proper plan.
 
-- **The tool surface is the contract.** The model can only do what you exposed. My brokerage servers are read-only _by construction_ — there is no `place_order` tool to call, no matter what anyone prompts. That's stronger than a permission checkbox; the capability doesn't exist.
-- **Credentials never leave the house.** The model gets results, never tokens. On the box, sensitive logins are sealed to the TPM and decrypted into memory at service start — no plaintext secrets on disk.
-- **The aggregation stays home.** This is the one I care about. The sensitive artifact isn't any single account, it's the _join_: every bank, brokerage, and pension in one place. Mine lives in a Postgres database on my own disk. Ask "how did my net worth move this quarter?" and the server queries locally and returns a summary — the full picture never exists anywhere I don't control.
-- **You choose granularity per surface.** My Gmail server can archive, label, and delete — things the official connector won't — precisely because I decided it should, and I know exactly which OAuth client holds that power.
-- **It's auditable.** One process and one log stream per integration. When I want to know what the model actually asked for last Tuesday, `journalctl` tells me. No vendor dashboard involved.
+## The levers
 
-## What it costs
+These were just a few examples, but the bottom line is the same for every implementation: I control my data locally and the model only exposes what I want to expose. Some servers are read only, some allow for more permissive actions. Some share tools for all the data whilst others expose only a very limited subset to retain a (sense of) privacy and data control.
+Credentials stay in-house as well. The model gets results, never tokens. On the mini-PC, sensitive logins are sealed to the [TPM](https://en.wikipedia.org/wiki/Trusted_Platform_Module) and decrypted into memory at service start, so no plaintext secrets on disk either.
+Aggregation stays on disk, and that's something I care about a lot. The sensitive data collection isn't a single account for some app, it's a combination of aggregated data I fully control. That in turn lets me decide how much the LLM knows: enough to be helpful, never enough to get a full picture if I'm not comfortable sharing it.
+Last but not least, it's fully auditable. I've got one process and one log stream per integration, and when I want to know what data a model actually requested last Tuesday, my logs can tell me without having any vendor dashboards involved
 
-An honest ledger, since the self-hosting genre loves to skip this part:
+(AI) Assistants are useful in proportion to the context you share with them, which is not always comfortable. The more useful the assistant, the more of your life is shared with some connector. A lot of people choose to either not share anything, or surrender it all. Self-hosted data and MCP is a nice third option. The models remain third party as long as I can't run a proper one myself, but memory, credentials, aggregation and all the levers live on a small media pc in my apartment. My data to grant, scope and revoke.
 
-- **Sessions expire.** One bank has no headless login, so every few weeks I SSH in and type a 4-digit code. Automation has a floor, and sometimes the floor is a human with a phone.
-- **OAuth apps need babysitting.** Consent screens, redirect URIs, verification states — the ambient bureaucracy of pretending to be a real app.
-- **Upstream moves.** A dependency update once reverted a patch I'd forgotten I made. The fix was a README note and some humility.
-- **The claude.ai transport is moody.** Web-side SSE drops more than it should; reconnecting fixes it. Desktop over Tailscale never blinks.
-
-Call it 15 minutes a month, heavily front-loaded. Whether that's a price or a hobby depends on you. For me it scratches the same itch as the rest of the homelab: I'd rather own a little toil than rent away all the control.
-
-## The trade I actually wanted
-
-Assistants are useful in proportion to the context you give them, which creates an uncomfortable gradient: the more useful the assistant, the more of your life sits behind someone else's connector. Most people resolve it by withholding everything or surrendering everything. Self-hosted MCP is the third option. The model stays rented — that's fine, I can't run it anyway — but the memory, the credentials, the joins, the levers live on a small quiet box in my apartment, mine to grant, scope, and revoke.
-
-There's a second payoff I didn't plan for. Because these servers speak an open protocol instead of a vendor SDK, the model stays swappable. Today my client is Claude and I'm happy there, but nothing is welded to it — point any MCP-capable client at the same servers and they answer the same. The day I want to switch providers, or run a local model against my own data, the integration layer doesn't change a line. Owning your data and staying free to choose the brain that reads it turn out to be the same decision.
-
-So Claude gets exactly what I hand it, one tool call at a time, for as long as I choose Claude. That's not distrust of the model. It's just the correct default for everything else in the chain.
+As MCP is an open protocol, the model stays swappable. Today my client is Claude but there's nothing preventing me from swapping to another model provider or even use local models in case that would make sense. The integration layer wouldn't change one thing.
