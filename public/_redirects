@@ -2,3 +2,11 @@
 # Old post slug (renamed 2026-07-05)
 /writing/self-hosting-my-own-mcp-servers/ /writing/self-hosting-mcp-servers/ 301
 /writing/self-hosting-my-own-mcp-servers /writing/self-hosting-mcp-servers/ 301
+
+# Gatsby-era post URLs (root-level slugs) → the archive at /posts/
+/about-promises-and-async-await/ /posts/about-promises-and-async-await/ 301
+/about-promises-and-async-await /posts/about-promises-and-async-await/ 301
+/a-3-d-journey-with-threejs-journey-xyz/ /posts/a-3-d-journey-with-threejs-journey-xyz/ 301
+/a-3-d-journey-with-threejs-journey-xyz /posts/a-3-d-journey-with-threejs-journey-xyz/ 301
+/polygon-runway-become-a-3-d-illustrator-course-review/ /posts/polygon-runway-become-a-3-d-illustrator-course-review/ 301
+/polygon-runway-become-a-3-d-illustrator-course-review /posts/polygon-runway-become-a-3-d-illustrator-course-review/ 301

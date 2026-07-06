@@ -6,11 +6,9 @@ import WritingRows from "../../components/WritingRows.astro";
 const posts = (await getCollection("writing")).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
 );
-// Archive hidden for now — restore this and the section below when the old
-// posts are ported (and move src/pages/_posts back to posts/).
-// const archive = (await getCollection('archive')).sort(
-//   (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
-// );
+const archive = (await getCollection("archive")).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
 ---
 
 <Base
@@ -31,10 +29,10 @@ const posts = (await getCollection("writing")).sort(
     <WritingRows posts={posts} />
   </section>
 
-  {
-    /* Archive hidden for now:
   <section class="section" data-rise data-rise-delay="0.2">
-    <div class="section-label archive-label"><span class="mark">§</span>Archive · older work</div>
+    <div class="section-label archive-label">
+      <span class="mark">§</span>Archive · older work
+    </div>
     <p class="archive-note">Older posts, kept at their original URLs.</p>
     <div class="rows">
       {
@@ -47,8 +45,7 @@ const posts = (await getCollection("writing")).sort(
         ))
       }
     </div>
-  </section> */
-  }
+  </section>
 </Base>
 
 <style>

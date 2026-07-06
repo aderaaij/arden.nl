@@ -410,11 +410,62 @@ a.row:hover {
   margin: 34px 0 16px;
 }
 
+.prose h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(18px, 2.4vw, 21px);
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 28px 0 12px;
+}
+
+.prose h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 24px 0 10px;
+}
+
 .prose p {
   font-size: 18px;
   line-height: 1.7;
   color: var(--intro);
   margin: 0 0 22px;
+}
+
+.prose img,
+.prose iframe {
+  display: block;
+  max-width: 100%;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+.prose img {
+  height: auto;
+}
+
+.prose iframe {
+  width: 100%;
+  background: var(--paper-2);
+}
+
+.prose figure {
+  margin: 30px 0;
+}
+
+.prose figure p {
+  margin: 0;
+}
+
+.prose figcaption {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--faint);
+  margin-top: 10px;
 }
 
 .prose a {
